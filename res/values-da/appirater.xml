@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   <!-- This is the message your users will see once they've passed the day+launches threshold. -->
+   <string name="APPIRATER_MESSAGE">Hvis du synes godt om %s app\'en, kunne du så tænke dig at anmelde den? Det tager mindre end et minut. Tak for din feedback!</string> 
+   <!-- This is the title of the message alert that users will see. -->
+   <string name="APPIRATER_MESSAGE_TITLE">Anmeld %s app\'en</string>
+   <!-- The text of the button that rejects reviewing the app. -->
+   <string name="APPIRATER_CANCEL_BUTTON">Nej tak</string>
+   <!-- Text of button that will send user to app review page. -->
+   <string name="APPIRATER_RATE_BUTTON">Anmeld %s app\'en</string>
+   <!-- Text for button to remind the user to review later. -->
+   <string name="APPIRATER_RATE_LATER">Påmind mig senere</string>
+</resources>
