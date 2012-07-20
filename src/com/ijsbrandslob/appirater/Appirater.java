@@ -413,13 +413,13 @@ public class Appirater {
    }
 
    // Settings
-   private static final String APPIRATER_FIRST_USE_DATE = "APPIRATER_FIRST_USE_DATE";
+   private static final String APPIRATER_FIRST_USE_DATE        = "APPIRATER_FIRST_USE_DATE";
    private static final String APPIRATER_REMINDER_REQUEST_DATE = "APPIRATER_REMINDER_REQUEST_DATE";
-   private static final String APPIRATER_USE_COUNT = "APPIRATER_USE_COUNT";
-   private static final String APPIRATER_SIG_EVENT_COUNT = "APPIRATER_SIG_EVENT_COUNT";
-   private static final String APPIRATER_CURRENT_VERSION = "APPIRATER_CURRENT_VERSION";
+   private static final String APPIRATER_USE_COUNT             = "APPIRATER_USE_COUNT";
+   private static final String APPIRATER_SIG_EVENT_COUNT       = "APPIRATER_SIG_EVENT_COUNT";
+   private static final String APPIRATER_CURRENT_VERSION       = "APPIRATER_CURRENT_VERSION";
    private static final String APPIRATER_RATED_CURRENT_VERSION = "APPIRATER_RATED_CURRENT_VERSION";
-   private static final String APPIRATER_DECLINED_TO_RATE = "APPIRATER_DECLINED_TO_RATE";
+   private static final String APPIRATER_DECLINED_TO_RATE      = "APPIRATER_DECLINED_TO_RATE";
 
    private void loadSettings() {
       //Resources res = mContext.getResources();
@@ -437,11 +437,11 @@ public class Appirater {
             mReminderRequestDate = new Date( reminderRequestDate );
          }
 
-         mUseCount = settings.getInt( APPIRATER_USE_COUNT, 0 );
+         mUseCount              = settings.getInt( APPIRATER_USE_COUNT, 0 );
          mSignificantEventCount = settings.getInt( APPIRATER_SIG_EVENT_COUNT, 0 );
-         mCurrentVersion = settings.getInt( APPIRATER_CURRENT_VERSION, 0 );
-         mRatedCurrentVersion = settings.getBoolean( APPIRATER_RATED_CURRENT_VERSION, false );
-         mDeclinedToRate = settings.getBoolean( APPIRATER_DECLINED_TO_RATE, false );
+         mCurrentVersion        = settings.getInt( APPIRATER_CURRENT_VERSION, 0 );
+         mRatedCurrentVersion   = settings.getBoolean( APPIRATER_RATED_CURRENT_VERSION, false );
+         mDeclinedToRate        = settings.getBoolean( APPIRATER_DECLINED_TO_RATE, false );
       }
    }
 
