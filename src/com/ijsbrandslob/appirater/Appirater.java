@@ -105,6 +105,7 @@ public class Appirater {
     * works.
     */
    private static final boolean DEBUG = false;
+   private static final int NO_VERSION = -1;
 
    private Context mContext;
    private Handler mHandler;
@@ -207,15 +208,16 @@ public class Appirater {
    private boolean connectedToNetwork() {
       try {
          HttpClient httpclient = new DefaultHttpClient();
-         HttpGet request = new HttpGet( "http://www.google.com/" );
-         HttpResponse result = httpclient.execute( request );
-         int statusCode = result.getStatusLine().getStatusCode();
-         if( statusCode < 400 ) {
+         HttpGet request       = new HttpGet( "http://www.google.com/" );
+         HttpResponse result   = httpclient.execute( request );
+         int statusCode        = result.getStatusLine().getStatusCode();
+      
+         if( statusCode < 400 )
             return true;
-         }
       } catch( Exception ex ) {
          Log.w("Appirater", ex.toString());
       }
+      
       return false;
    }
 
@@ -226,19 +228,20 @@ public class Appirater {
       CharSequence appname = "unknown";
       try {
          appname = mContext.getPackageManager().getApplicationLabel( mContext.getPackageManager().getApplicationInfo( mContext.getPackageName(), 0 ) );
-      }catch(NameNotFoundException ex) {
-      }
+      } catch(NameNotFoundException ex) { /* Do nothing */ }
+      
       rateDialog.setTitle( String.format( res.getString( R.string.APPIRATER_MESSAGE_TITLE ), appname ) );
       rateDialog.setContentView( R.layout.appirater );
 
       TextView messageArea = (TextView)rateDialog.findViewById( R.id.appirater_message_area );
       messageArea.setText( String.format( res.getString( R.string.APPIRATER_MESSAGE ), appname ) );
 
-      Button rateButton = (Button)rateDialog.findViewById( R.id.appirater_rate_button );
-      rateButton.setText( String.format( res.getString( R.string.APPIRATER_RATE_BUTTON ), appname ) );
+      Button rateButton        = (Button)rateDialog.findViewById( R.id.appirater_rate_button );
       Button remindLaterButton = (Button)rateDialog.findViewById( R.id.appirater_rate_later_button );
-      Button cancelButton = (Button)rateDialog.findViewById( R.id.appirater_cancel_button );
+      Button cancelButton      = (Button)rateDialog.findViewById( R.id.appirater_cancel_button );
 
+      rateButton.setText( String.format( res.getString( R.string.APPIRATER_RATE_BUTTON ), appname ) );
+      
       rateButton.setOnClickListener( new OnClickListener() {
          @Override
          public void onClick( View v ) {
@@ -279,6 +282,7 @@ public class Appirater {
             rateDialog.dismiss();
          }
       });
+      
       rateDialog.show();
    }
 
@@ -305,14 +309,12 @@ public class Appirater {
       }
 
       // has the user previously declined to rate this version of the app?
-      if( mDeclinedToRate ) {
+      if( mDeclinedToRate )
          return false;
-      }
 
       // has the user already rated the app?
-      if( mRatedCurrentVersion ) {
+      if( mRatedCurrentVersion )
          return false;
-      }
 
       // if the user wanted to be reminded later, has enough time passed?
       if( null != mReminderRequestDate ) {
@@ -326,17 +328,11 @@ public class Appirater {
    }
 
    private void incrementUseCount() {
-      // get the app's version
-      int version = -1;
-      try {
-         version = mContext.getPackageManager().getPackageInfo( mContext.getPackageName(), 0 ).versionCode;
-      } catch( NameNotFoundException ex ){
-      }
+      int version = appVersion();
 
       // get the version number that we've been tracking
-      if( mCurrentVersion == -1 ) {
+      if( mCurrentVersion == NO_VERSION )
          mCurrentVersion = version;
-      }
 
       if( DEBUG ) {
          System.out.println( String.format( "APPIRATER Tracking version: %d", mCurrentVersion ) );
@@ -344,9 +340,8 @@ public class Appirater {
 
       if( mCurrentVersion == version ) {
          // check if the first use date has been set. if not, set it.
-         if( mFirstUseDate == null ) {
+         if( mFirstUseDate == null )
             mFirstUseDate = new Date();
-         }
 
          // increment the use count
          ++mUseCount;
@@ -370,17 +365,11 @@ public class Appirater {
    }
 
    private void incrementSignificantEventCount() {
-      // get the app's version
-      int version = -1;
-      try {
-         version = mContext.getPackageManager().getPackageInfo( mContext.getPackageName(), 0 ).versionCode;
-      } catch( NameNotFoundException ex ){
-      }
+      int version = appVersion();
 
       // get the version number that we've been tracking
-      if( mCurrentVersion == -1 ) {
+      if( mCurrentVersion == NO_VERSION )
          mCurrentVersion = version;
-      }
 
       if( DEBUG ) {
          System.out.println( String.format( "APPIRATER Tracking version: %d", mCurrentVersion ) );
@@ -388,9 +377,8 @@ public class Appirater {
 
       if( mCurrentVersion == version ) {
          // check if the first use date has been set. if not, set it.
-         if( mFirstUseDate == null ) {
+         if( mFirstUseDate == null )
             mFirstUseDate = new Date();
-         }
 
          // increment the significant event count
          ++mSignificantEventCount;
@@ -411,6 +399,13 @@ public class Appirater {
 
       saveSettings();
    }
+   private int appVersion() {
+	   try {
+	       return mContext.getPackageManager().getPackageInfo( mContext.getPackageName(), 0 ).versionCode;
+	   } catch( NameNotFoundException ex ) {
+		   return -1;
+	   }
+   }
 
    // Settings
    private static final String APPIRATER_FIRST_USE_DATE        = "APPIRATER_FIRST_USE_DATE";
@@ -428,14 +423,12 @@ public class Appirater {
       // Did we save settings before?
       if( settings.contains( APPIRATER_FIRST_USE_DATE ) ) {
          long firstUseDate = settings.getLong( APPIRATER_FIRST_USE_DATE, -1 );
-         if( -1 != firstUseDate ) {
+         if( -1 != firstUseDate )
             mFirstUseDate = new Date( firstUseDate );
-         }
 
          long reminderRequestDate = settings.getLong( APPIRATER_REMINDER_REQUEST_DATE, -1 );
-         if( -1 != reminderRequestDate ) {
+         if( -1 != reminderRequestDate )
             mReminderRequestDate = new Date( reminderRequestDate );
-         }
 
          mUseCount              = settings.getInt( APPIRATER_USE_COUNT, 0 );
          mSignificantEventCount = settings.getInt( APPIRATER_SIG_EVENT_COUNT, 0 );
@@ -451,15 +444,13 @@ public class Appirater {
       SharedPreferences.Editor editor = prefs.edit();
 
       long firstUseDate = -1;
-      if( mFirstUseDate != null ) {
+      if( mFirstUseDate != null )
          firstUseDate = mFirstUseDate.getTime();
-      }
       editor.putLong( APPIRATER_FIRST_USE_DATE, firstUseDate );
 
       long reminderRequestDate = -1;
-      if( mReminderRequestDate != null ) {
+      if( mReminderRequestDate != null )
          reminderRequestDate = mReminderRequestDate.getTime();
-      }
       editor.putLong( APPIRATER_REMINDER_REQUEST_DATE, reminderRequestDate );
 
       editor.putInt( APPIRATER_USE_COUNT, mUseCount );
