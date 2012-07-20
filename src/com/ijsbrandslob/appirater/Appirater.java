@@ -63,52 +63,12 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class Appirater {
-   /*
-    * Users will need to have the same version of your app installed for this
-    * many days before they will be prompted to rate it.
-    */
-   private static final int DAYS_UNTIL_PROMPT = 15;
-
-   /*
-    * An example of a 'use' would be if the user launched the app. Bringing the
-    * app into the foreground (on devices that support it) would also be
-    * considered a 'use'. You tell Appirater about these events using the two
-    * methods: Appirater.appLaunched(); Appirater.appEnteredForeground();
-    *
-    * Users need to 'use' the same version of the app this many times before
-    * before they will be prompted to rate it.
-    */
-   private static final int USES_UNTIL_PROMPT = 20;
-
-   /*
-    * A significant event can be anything you want to be in your app. In a
-    * telephone app, a significant event might be placing or receiving a call.
-    * In a game, it might be beating a level or a boss. This is just another
-    * layer of filtering that can be used to make sure that only the most loyal
-    * of your users are being prompted to rate you on the app store. If you
-    * leave this at a value of -1, then this won't be a criteria used for
-    * rating. To tell Appirater that the user has performed a significant event,
-    * call the method: Appirater.userDidSignificantEvent();
-    */
-   private static final int SIG_EVENTS_UNTIL_PROMPT = -1;
-
-   /*
-    * Once the rating alert is presented to the user, they might select 'Remind
-    * me later'. This value specifies how long (in days) Appirater will wait
-    * before reminding them.
-    */
-   private static final int TIME_BEFORE_REMINDING = 1;
-
-   /*
-    * 'true' will show the Appirater alert everytime. Useful for testing how
-    * your message looks and making sure the link to your app's review page
-    * works.
-    */
-   private static final boolean DEBUG = false;
    private static final int NO_VERSION = -1;
 
-   private Context mContext;
-   private Handler mHandler;
+   private final Context mContext;
+   private final Handler mHandler;
+   private final Config mConfig;
+   
    private Date mFirstUseDate;
    private Date mReminderRequestDate;
    private int mUseCount;
@@ -116,11 +76,30 @@ public class Appirater {
    private int mCurrentVersion;
    private boolean mRatedCurrentVersion;
    private boolean mDeclinedToRate;
-
+    
+   /**
+    * Creates an Appirater with a custom Config.
+    *
+    * @param context The Activity where the Appirater should appear.
+    * @param handler Handler for UI updates.
+    * @param config The configuration instance with custom settings.
+    */
+   public Appirater( Context context, Handler handler, Config config ) {
+	   mContext = context;
+	   mHandler = handler;
+	   mConfig  = config;
+	   
+	   loadSettings();
+   }
+   
+   /**
+    * Creates an Appirater with default settings.
+    * 
+    * @param context The Activity where the Appirater should appear.
+    * @param handler Handler for UI updates.
+    */
    public Appirater( Context context, Handler handler ) {
-      mContext = context;
-      mHandler = handler;
-      loadSettings();
+      this(context, handler, new Config.Builder().build());
    }
 
    /*
@@ -183,8 +162,7 @@ public class Appirater {
 
    private void incrementAndRate( boolean canPromptForRating ) {
       incrementUseCount();
-      if (canPromptForRating && ratingConditionsHaveBeenMet()
-            && connectedToNetwork()) {
+      if (canPromptForRating && ratingConditionsHaveBeenMet() && connectedToNetwork()) {
          mHandler.post(new Runnable() {
              public void run() {
                  showRatingAlert();
@@ -195,8 +173,7 @@ public class Appirater {
 
    private void incrementSignificantEventAndRate( boolean canPromptForRating ) {
       incrementSignificantEventCount();
-      if (canPromptForRating && ratingConditionsHaveBeenMet()
-            && connectedToNetwork()) {
+      if (canPromptForRating && ratingConditionsHaveBeenMet() && connectedToNetwork()) {
          mHandler.post(new Runnable() {
              public void run() {
                  showRatingAlert();
@@ -287,26 +264,23 @@ public class Appirater {
    }
 
    private boolean ratingConditionsHaveBeenMet() {
-      if( DEBUG ) {
+      if( mConfig.debug )
          return true;
-      }
 
       Date now = new Date();
       long timeSinceFirstLaunch = now.getTime() - mFirstUseDate.getTime();
-      long timeUntilRate = 1000 * 60 * 60 * 24 * DAYS_UNTIL_PROMPT;
-      if( timeSinceFirstLaunch < timeUntilRate ) {
+      long timeUntilRate = 1000 * 60 * 60 * 24 * mConfig.daysUntilPrompt;
+      
+      if( timeSinceFirstLaunch < timeUntilRate )
          return false;
-      }
 
       // check if the app has been used enough
-      if( mUseCount < USES_UNTIL_PROMPT ) {
+      if( mUseCount < mConfig.usesUntilPrompt )
          return false;
-      }
 
       // check if the user has done enough significant events
-      if( mSignificantEventCount < SIG_EVENTS_UNTIL_PROMPT ) {
+      if( mSignificantEventCount < mConfig.sigEventsBeforePrompt )
          return false;
-      }
 
       // has the user previously declined to rate this version of the app?
       if( mDeclinedToRate )
@@ -319,11 +293,12 @@ public class Appirater {
       // if the user wanted to be reminded later, has enough time passed?
       if( null != mReminderRequestDate ) {
          long timeSinceReminderRequest = mReminderRequestDate.getTime() - now.getTime();
-         long timeUntilReminder = 1000 * 60 * 60 * 24 * TIME_BEFORE_REMINDING;
-         if( timeSinceReminderRequest < timeUntilReminder ) {
+         long timeUntilReminder = 1000 * 60 * 60 * 24 * mConfig.timeBeforeReminding;
+
+         if( timeSinceReminderRequest < timeUntilReminder )
             return false;
-         }
       }
+      
       return true;
    }
 
@@ -334,33 +309,25 @@ public class Appirater {
       if( mCurrentVersion == NO_VERSION )
          mCurrentVersion = version;
 
-      if( DEBUG ) {
+      if( mConfig.debug )
          System.out.println( String.format( "APPIRATER Tracking version: %d", mCurrentVersion ) );
-      }
 
       if( mCurrentVersion == version ) {
          // check if the first use date has been set. if not, set it.
          if( mFirstUseDate == null )
             mFirstUseDate = new Date();
 
-         // increment the use count
-         ++mUseCount;
-
-         if( DEBUG ) {
+         if( mConfig.debug )
             System.out.println( String.format( "APPIRATER Use count: %d", mUseCount ) );
-         }
       }
       else {
          // it's a new version of the app, so restart tracking
-         mCurrentVersion = version;
-         mFirstUseDate = new Date();
-         mUseCount = 1;
-         mSignificantEventCount = 0;
-         mRatedCurrentVersion = false;
-         mDeclinedToRate = false;
-         mReminderRequestDate = null;
+    	 resetTracking(version);
       }
 
+      // increment the use count
+      ++mUseCount;
+      
       saveSettings();
    }
 
@@ -371,39 +338,47 @@ public class Appirater {
       if( mCurrentVersion == NO_VERSION )
          mCurrentVersion = version;
 
-      if( DEBUG ) {
+      if( mConfig.debug )
          System.out.println( String.format( "APPIRATER Tracking version: %d", mCurrentVersion ) );
-      }
 
       if( mCurrentVersion == version ) {
          // check if the first use date has been set. if not, set it.
          if( mFirstUseDate == null )
             mFirstUseDate = new Date();
 
-         // increment the significant event count
-         ++mSignificantEventCount;
-
-         if( DEBUG ) {
+         if( mConfig.debug )
             System.out.println( String.format( "APPIRATER Significant event count: %d", mSignificantEventCount ) );
-         }
       }
       else {
-         mCurrentVersion = version;
-         mFirstUseDate = null;
-         mUseCount = 0;
-         mSignificantEventCount = 1;
-         mRatedCurrentVersion = false;
-         mDeclinedToRate = false;
-         mReminderRequestDate = null;
+    	 // it's a new version of the app, so restart tracking
+         resetTracking(version);
       }
 
+      // increment the significant event count
+      ++mSignificantEventCount;
+      
       saveSettings();
    }
+   
+   /**
+    * Resets the Appirater tracking when there's a new version of the app.
+    * @param version The new version to track.
+    */
+   private void resetTracking(int version) {
+	   mCurrentVersion        = version;
+       mFirstUseDate          = null;
+       mUseCount              = 0;
+       mSignificantEventCount = 0;
+       mRatedCurrentVersion   = false;
+       mDeclinedToRate        = false;
+       mReminderRequestDate   = null;
+   }
+   
    private int appVersion() {
 	   try {
 	       return mContext.getPackageManager().getPackageInfo( mContext.getPackageName(), 0 ).versionCode;
 	   } catch( NameNotFoundException ex ) {
-		   return -1;
+		   return NO_VERSION;
 	   }
    }
 
