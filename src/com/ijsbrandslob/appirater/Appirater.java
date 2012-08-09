@@ -303,70 +303,30 @@ public class Appirater {
    }
 
    private void incrementUseCount() {
-      int version = appVersion();
-
-      // get the version number that we've been tracking
-      if( mCurrentVersion == NO_VERSION )
-         mCurrentVersion = version;
-
-      if( mConfig.debug )
-         System.out.println( String.format( "APPIRATER Tracking version: %d", mCurrentVersion ) );
-
-      if( mCurrentVersion == version ) {
-         // check if the first use date has been set. if not, set it.
-         if( mFirstUseDate == null )
-            mFirstUseDate = new Date();
-
-         if( mConfig.debug )
-            System.out.println( String.format( "APPIRATER Use count: %d", mUseCount ) );
-      }
-      else {
-         // it's a new version of the app, so restart tracking
-    	 resetTracking(version);
-      }
-
-      // increment the use count
       ++mUseCount;
       
       saveSettings();
+      
+      if( mConfig.debug )
+    	  System.out.println( String.format( "APPIRATER Use count: %d", mUseCount ) );
    }
 
    private void incrementSignificantEventCount() {
-      int version = appVersion();
-
-      // get the version number that we've been tracking
-      if( mCurrentVersion == NO_VERSION )
-         mCurrentVersion = version;
-
-      if( mConfig.debug )
-         System.out.println( String.format( "APPIRATER Tracking version: %d", mCurrentVersion ) );
-
-      if( mCurrentVersion == version ) {
-         // check if the first use date has been set. if not, set it.
-         if( mFirstUseDate == null )
-            mFirstUseDate = new Date();
-
-         if( mConfig.debug )
-            System.out.println( String.format( "APPIRATER Significant event count: %d", mSignificantEventCount ) );
-      }
-      else {
-    	 // it's a new version of the app, so restart tracking
-         resetTracking(version);
-      }
-
-      // increment the significant event count
       ++mSignificantEventCount;
       
       saveSettings();
+      
+      if( mConfig.debug )
+    	  System.out.println( String.format( "APPIRATER Significant Event count: %d", mSignificantEventCount ) );
    }
    
    /**
     * Resets the Appirater tracking when there's a new version of the app.
     * @param version The new version to track.
     */
-   private void resetTracking(int version) {
-	   mCurrentVersion        = version;
-       mFirstUseDate          = null;
+   private void resetTracking() {
+	   mCurrentVersion        = appVersion();
+       mFirstUseDate          = new Date();
        mUseCount              = 0;
        mSignificantEventCount = 0;
        mRatedCurrentVersion   = false;
@@ -392,7 +352,6 @@ public class Appirater {
    private static final String APPIRATER_DECLINED_TO_RATE      = "APPIRATER_DECLINED_TO_RATE";
 
    private void loadSettings() {
-      //Resources res = mContext.getResources();
       SharedPreferences settings = mContext.getSharedPreferences( mContext.getPackageName(), Context.MODE_PRIVATE );
 
       // Did we save settings before?
@@ -405,16 +364,28 @@ public class Appirater {
          if( -1 != reminderRequestDate )
             mReminderRequestDate = new Date( reminderRequestDate );
 
-         mUseCount              = settings.getInt( APPIRATER_USE_COUNT, 0 );
-         mSignificantEventCount = settings.getInt( APPIRATER_SIG_EVENT_COUNT, 0 );
-         mCurrentVersion        = settings.getInt( APPIRATER_CURRENT_VERSION, 0 );
+         mUseCount              = settings.getInt(     APPIRATER_USE_COUNT,             0 );
+         mSignificantEventCount = settings.getInt(     APPIRATER_SIG_EVENT_COUNT,       0 );
+         mCurrentVersion        = settings.getInt(     APPIRATER_CURRENT_VERSION,       0 );
          mRatedCurrentVersion   = settings.getBoolean( APPIRATER_RATED_CURRENT_VERSION, false );
-         mDeclinedToRate        = settings.getBoolean( APPIRATER_DECLINED_TO_RATE, false );
+         mDeclinedToRate        = settings.getBoolean( APPIRATER_DECLINED_TO_RATE,      false );
       }
+      else {
+          mCurrentVersion = NO_VERSION;
+
+          if( mConfig.debug )
+             System.out.println( String.format( "APPIRATER Tracking version: %d", mCurrentVersion ) );
+      }
+      
+      if(newAppVersion())
+    	  resetTracking();
+   }
+
+   private boolean newAppVersion() {
+	   return appVersion() != mCurrentVersion;
    }
 
    private void saveSettings() {
-      //Resources res = mContext.getResources();
       SharedPreferences prefs = mContext.getSharedPreferences( mContext.getPackageName(), Context.MODE_PRIVATE );
       SharedPreferences.Editor editor = prefs.edit();
 
