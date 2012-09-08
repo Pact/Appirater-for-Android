@@ -292,7 +292,7 @@ public class Appirater {
 
       // if the user wanted to be reminded later, has enough time passed?
       if( null != mReminderRequestDate ) {
-         long timeSinceReminderRequest = mReminderRequestDate.getTime() - now.getTime();
+         long timeSinceReminderRequest = now.getTime() - mReminderRequestDate.getTime();
          long timeUntilReminder = 1000 * 60 * 60 * 24 * mConfig.timeBeforeReminding;
 
          if( timeSinceReminderRequest < timeUntilReminder )
