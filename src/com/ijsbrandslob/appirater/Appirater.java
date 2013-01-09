@@ -389,8 +389,11 @@ public class Appirater {
 		// Did we save settings before?
 		if (settings.contains(APPIRATER_FIRST_USE_DATE)) {
 			long firstUseDate = settings.getLong(APPIRATER_FIRST_USE_DATE, -1);
-			if (-1 != firstUseDate)
+			if (-1 != firstUseDate) {
 				mFirstUseDate = new Date(firstUseDate);
+			} else {
+				mFirstUseDate = new Date();
+			}
 
 			long reminderRequestDate = settings.getLong(
 					APPIRATER_REMINDER_REQUEST_DATE, -1);
