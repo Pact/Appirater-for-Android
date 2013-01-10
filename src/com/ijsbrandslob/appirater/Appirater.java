@@ -410,6 +410,7 @@ public class Appirater {
 					false);
 		} else {
 			mCurrentVersion = NO_VERSION;
+			mFirstUseDate = new Date();
 
 			if (mConfig.debug)
 				System.out.println(String.format(
@@ -418,6 +419,7 @@ public class Appirater {
 
 		if (newAppVersion())
 			resetTrackingForNewVersion();
+		saveSettings();
 	}
 
 	private boolean newAppVersion() {
