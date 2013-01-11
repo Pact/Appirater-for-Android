@@ -362,6 +362,7 @@ public class Appirater {
 		mRatedCurrentVersion = false;
 		mDeclinedToRate = false;
 		mReminderRequestDate = null;
+		mSignificantEventCount = 0;
 	}
 
 	private int appVersion() {
