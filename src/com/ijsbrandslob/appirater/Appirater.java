@@ -63,7 +63,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class Appirater {
-	private static final int NO_VERSION = -1;
+	private static final String NO_VERSION = "";
 
 	private final Context mContext;
 	private final Handler mHandler;
@@ -73,7 +73,7 @@ public class Appirater {
 	private Date mReminderRequestDate;
 	private int mUseCount;
 	private int mSignificantEventCount;
-	private int mCurrentVersion;
+	private String mCurrentVersion;
 	private boolean mRatedCurrentVersion;
 	private boolean mDeclinedToRate;
 
@@ -360,19 +360,20 @@ public class Appirater {
 		mReminderRequestDate = null;
 	}
 
-	private void resetTrackingForNewVersion() {
+	public void resetTrackingForNewVersion() {
 		mCurrentVersion = appVersion();
 		mRatedCurrentVersion = false;
 		mDeclinedToRate = false;
 		mReminderRequestDate = null;
 		mSignificantEventCount = 0;
 		mUseCount = 0;
+		saveSettings();
 	}
 
-	private int appVersion() {
+	private String appVersion() {
 		try {
 			return mContext.getPackageManager().getPackageInfo(
-					mContext.getPackageName(), 0).versionCode;
+					mContext.getPackageName(), 0).versionName;
 		} catch (NameNotFoundException ex) {
 			return NO_VERSION;
 		}
@@ -408,7 +409,7 @@ public class Appirater {
 			mUseCount = settings.getInt(APPIRATER_USE_COUNT, 0);
 			mSignificantEventCount = settings.getInt(APPIRATER_SIG_EVENT_COUNT,
 					0);
-			mCurrentVersion = settings.getInt(APPIRATER_CURRENT_VERSION, 0);
+			mCurrentVersion = settings.getString(APPIRATER_CURRENT_VERSION, NO_VERSION);
 			mRatedCurrentVersion = settings.getBoolean(
 					APPIRATER_RATED_CURRENT_VERSION, false);
 			mDeclinedToRate = settings.getBoolean(APPIRATER_DECLINED_TO_RATE,
@@ -428,7 +429,11 @@ public class Appirater {
 	}
 
 	private boolean newAppVersion() {
-		return appVersion() != mCurrentVersion;
+		String[] realVersion = appVersion().split(".");
+		String[] savedVersion = mCurrentVersion.split(".");
+		return (savedVersion.length >= 2 && realVersion.length >= 2
+				&& savedVersion[0] == realVersion[0]
+				&& savedVersion[1] == realVersion[1]);
 	}
 
 	private void saveSettings() {
@@ -448,7 +453,7 @@ public class Appirater {
 
 		editor.putInt(APPIRATER_USE_COUNT, mUseCount);
 		editor.putInt(APPIRATER_SIG_EVENT_COUNT, mSignificantEventCount);
-		editor.putInt(APPIRATER_CURRENT_VERSION, mCurrentVersion);
+		editor.putString(APPIRATER_CURRENT_VERSION, mCurrentVersion);
 		editor.putBoolean(APPIRATER_RATED_CURRENT_VERSION, mRatedCurrentVersion);
 		editor.putBoolean(APPIRATER_DECLINED_TO_RATE, mDeclinedToRate);
 
