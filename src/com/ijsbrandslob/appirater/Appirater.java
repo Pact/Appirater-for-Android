@@ -117,6 +117,7 @@ public class Appirater {
 	public void appLaunched(final boolean canPromptForRating) {
 		new Thread(new Runnable() {
 			public void run() {
+				loadSettings();
 				incrementAndRate(canPromptForRating);
 			}
 		}).start();
@@ -137,6 +138,7 @@ public class Appirater {
 	public void appEnteredForeground(final boolean canPromptForRating) {
 		new Thread(new Runnable() {
 			public void run() {
+				loadSettings();
 				incrementAndRate(canPromptForRating);
 			}
 		}).start();
@@ -157,6 +159,7 @@ public class Appirater {
 	 * pass true for canPromptForRating in those methods).
 	 */
 	public void userDidSignificantEvent(boolean canPromptForRating) {
+		loadSettings();
 		incrementSignificantEventAndRate(canPromptForRating);
 	}
 
