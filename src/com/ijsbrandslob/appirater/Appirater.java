@@ -102,7 +102,7 @@ public class Appirater {
 		this(context, handler, new Config.Builder().build());
 	}
 
-	/*
+	/**
 	 * Tells Appirater that the app has launched. You should call this method at
 	 * the end of your application main activity delegate's Activity.onStart()
 	 * method.
@@ -122,7 +122,7 @@ public class Appirater {
 		}).start();
 	}
 
-	/*
+	/**
 	 * Tells Appirater that the app was brought to the foreground on
 	 * multitasking devices. You should call this method from the application
 	 * delegate's Activity.onResume() method.
