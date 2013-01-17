@@ -47,11 +47,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.net.Uri;
@@ -63,7 +63,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class Appirater {
-	private static final String NO_VERSION = "";
+	private static final String NO_VERSION = "-1.-1.-1";
 
 	private final Context mContext;
 	private final Handler mHandler;
@@ -384,7 +384,7 @@ public class Appirater {
 	private static final String APPIRATER_REMINDER_REQUEST_DATE = "APPIRATER_REMINDER_REQUEST_DATE";
 	private static final String APPIRATER_USE_COUNT = "APPIRATER_USE_COUNT";
 	private static final String APPIRATER_SIG_EVENT_COUNT = "APPIRATER_SIG_EVENT_COUNT";
-	private static final String APPIRATER_CURRENT_VERSION = "APPIRATER_CURRENT_VERSION";
+	private static final String APPIRATER_CURRENT_VERSION_NAME = "APPIRATER_CURRENT_VERSION_NAME";
 	private static final String APPIRATER_RATED_CURRENT_VERSION = "APPIRATER_RATED_CURRENT_VERSION";
 	private static final String APPIRATER_DECLINED_TO_RATE = "APPIRATER_DECLINED_TO_RATE";
 
@@ -409,13 +409,16 @@ public class Appirater {
 			mUseCount = settings.getInt(APPIRATER_USE_COUNT, 0);
 			mSignificantEventCount = settings.getInt(APPIRATER_SIG_EVENT_COUNT,
 					0);
-			mCurrentVersion = settings.getString(APPIRATER_CURRENT_VERSION, NO_VERSION);
+			mCurrentVersion = settings.getString(APPIRATER_CURRENT_VERSION_NAME, NO_VERSION);
+			if (mCurrentVersion == null || mCurrentVersion.equals("")) {
+				mCurrentVersion = NO_VERSION;
+			}
 			mRatedCurrentVersion = settings.getBoolean(
 					APPIRATER_RATED_CURRENT_VERSION, false);
 			mDeclinedToRate = settings.getBoolean(APPIRATER_DECLINED_TO_RATE,
 					false);
 		} else {
-			mCurrentVersion = NO_VERSION;
+			mCurrentVersion = appVersion();
 			mFirstUseDate = new Date();
 
 			if (mConfig.debug)
@@ -429,11 +432,15 @@ public class Appirater {
 	}
 
 	private boolean newAppVersion() {
-		String[] realVersion = appVersion().split(".");
-		String[] savedVersion = mCurrentVersion.split(".");
+		if (mCurrentVersion == null || mCurrentVersion.equals(NO_VERSION)) {
+			return true;
+		}
+		String[] realVersion = appVersion().split("\\.");
+		String[] savedVersion = mCurrentVersion.split("\\.");
+		//Both are long enough to compare
+		//AND not both the same first two units
 		return (savedVersion.length >= 2 && realVersion.length >= 2
-				&& savedVersion[0] == realVersion[0]
-				&& savedVersion[1] == realVersion[1]);
+				&! (savedVersion[0].equals(realVersion[0]) && savedVersion[1].equals(realVersion[1])));
 	}
 
 	private void saveSettings() {
@@ -453,7 +460,7 @@ public class Appirater {
 
 		editor.putInt(APPIRATER_USE_COUNT, mUseCount);
 		editor.putInt(APPIRATER_SIG_EVENT_COUNT, mSignificantEventCount);
-		editor.putString(APPIRATER_CURRENT_VERSION, mCurrentVersion);
+		editor.putString(APPIRATER_CURRENT_VERSION_NAME, mCurrentVersion);
 		editor.putBoolean(APPIRATER_RATED_CURRENT_VERSION, mRatedCurrentVersion);
 		editor.putBoolean(APPIRATER_DECLINED_TO_RATE, mDeclinedToRate);
 
