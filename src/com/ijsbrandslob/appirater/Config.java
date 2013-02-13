@@ -1,6 +1,12 @@
 package com.ijsbrandslob.appirater;
 
+import android.app.Dialog;
+
 public class Config {
+	public interface RatingDialogBuilder {
+		public Dialog buildRatingDialog();
+	}
+
 	/**
 	 * If true then Appirater will prompt the user every time the Activity is
 	 * started. Useful for testing how your message looks and making sure the
@@ -44,12 +50,18 @@ public class Config {
 	 */
 	public final int timeBeforeReminding;
 
-	private Config(int daysUntilPrompt, int usesUntilPrompt, int timeBeforeReminding, int sigEventsBeforePrompt, boolean debug) {
+	/**
+	 * A custom dialog builder
+	 */
+	public final RatingDialogBuilder dialogBuilder;
+
+	private Config(int daysUntilPrompt, int usesUntilPrompt, int timeBeforeReminding, int sigEventsBeforePrompt, RatingDialogBuilder dialogBuilder, boolean debug) {
 		this.debug                 = debug;
 		this.daysUntilPrompt       = daysUntilPrompt;
 		this.timeBeforeReminding   = timeBeforeReminding;
 		this.usesUntilPrompt       = usesUntilPrompt;
 		this.sigEventsBeforePrompt = sigEventsBeforePrompt;
+		this.dialogBuilder         = dialogBuilder;
 	}
 
 	public static class Builder {
@@ -62,6 +74,7 @@ public class Config {
 		private int usesUntilPrompt;
 		private int timeBeforeReminding;
 		private int sigEventsBeforePrompt;
+		private RatingDialogBuilder dialogBuilder;
 		private boolean debug;
 
 		/**
@@ -72,6 +85,7 @@ public class Config {
 			timeBeforeReminding   = DEFAULT_TIME_BEFORE_REMINDING;
 			usesUntilPrompt       = DEFAULT_USES_UNTIL_PROMPT;
 			sigEventsBeforePrompt = DEFAULT_SIG_EVENTS_UNTIL_PROMPT;
+			dialogBuilder         = null;
 		}
 
 		/**
@@ -125,6 +139,16 @@ public class Config {
 		}
 
 		/**
+		 * Set a custom dialog builder to create the layout and handle clicks
+		 * @param dialogBuilder To build the alert dialog
+		 * @return This Builder object
+		 */
+		public Builder setDialogBuilder(RatingDialogBuilder dialogBuilder) {
+			this.dialogBuilder = dialogBuilder;
+			return this;
+		}
+
+		/**
 		 * Enables debugging.
 		 * 
 		 * @return This Builder object.
@@ -140,7 +164,7 @@ public class Config {
 		 * @return The Config with custom settings.
 		 */
 		public Config build() {
-			return new Config(daysUntilPrompt, usesUntilPrompt,	timeBeforeReminding, sigEventsBeforePrompt, debug);
+			return new Config(daysUntilPrompt, usesUntilPrompt,	timeBeforeReminding, sigEventsBeforePrompt, dialogBuilder, debug);
 		}
 	}
 }

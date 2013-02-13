@@ -203,7 +203,7 @@ public class Appirater {
 		return false;
 	}
 
-	private void showRatingAlert() {
+	private Dialog buildRatingDialog() {
 		final Dialog rateDialog = new Dialog(mContext);
 		final Resources res = mContext.getResources();
 
@@ -239,27 +239,9 @@ public class Appirater {
 			public void onClick(View v) {
 				rateDialog.dismiss();
 
-				PackageManager packageManager = mContext.getPackageManager();
-				Uri marketUri = Uri.parse(String.format(
-						"market://details?id=%s", mContext.getPackageName()));
-				Intent marketIntent = new Intent(Intent.ACTION_VIEW)
-						.setData(marketUri);
-
-				List<?> list = packageManager.queryIntentActivities(
-						marketIntent, PackageManager.MATCH_DEFAULT_ONLY);
-				if (list.size() > 0) {
-					mContext.startActivity(marketIntent);
-				} else {
-					Uri webUri = Uri.parse(String.format(
-							"http://play.google.com/store/apps/details?id=%s",
-							mContext.getPackageName()));
-					Intent webIntent = new Intent(Intent.ACTION_VIEW)
-							.setData(webUri);
-					mContext.startActivity(webIntent);
-				}
-
 				mRatedCurrentVersion = true;
 				saveSettings();
+				launchPlayStore();
 			}
 		});
 
@@ -280,8 +262,40 @@ public class Appirater {
 				rateDialog.dismiss();
 			}
 		});
+		return rateDialog;
+	}
+
+	private void showRatingAlert() {
+		final Dialog rateDialog;
+		if (mConfig.dialogBuilder == null) {
+			rateDialog = buildRatingDialog();
+		} else {
+			rateDialog = mConfig.dialogBuilder.buildRatingDialog();
+		}
+
 
 		rateDialog.show();
+	}
+
+	public void launchPlayStore() {
+		PackageManager packageManager = mContext.getPackageManager();
+		Uri marketUri = Uri.parse(String.format(
+				"market://details?id=%s", mContext.getPackageName()));
+		Intent marketIntent = new Intent(Intent.ACTION_VIEW)
+				.setData(marketUri);
+
+		List<?> list = packageManager.queryIntentActivities(
+				marketIntent, PackageManager.MATCH_DEFAULT_ONLY);
+		if (list.size() > 0) {
+			mContext.startActivity(marketIntent);
+		} else {
+			Uri webUri = Uri.parse(String.format(
+					"http://play.google.com/store/apps/details?id=%s",
+					mContext.getPackageName()));
+			Intent webIntent = new Intent(Intent.ACTION_VIEW)
+					.setData(webUri);
+			mContext.startActivity(webIntent);
+		}
 	}
 
 	private boolean ratingConditionsHaveBeenMet() {
@@ -443,7 +457,7 @@ public class Appirater {
 				&! (savedVersion[0].equals(realVersion[0]) && savedVersion[1].equals(realVersion[1])));
 	}
 
-	private void saveSettings() {
+	public void saveSettings() {
 		SharedPreferences prefs = mContext.getSharedPreferences(
 				mContext.getPackageName(), Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = prefs.edit();
@@ -465,5 +479,13 @@ public class Appirater {
 		editor.putBoolean(APPIRATER_DECLINED_TO_RATE, mDeclinedToRate);
 
 		editor.commit();
+	}
+
+	public void setReminderRequestDate(Date reminderRequestDate) {
+		mReminderRequestDate = reminderRequestDate;
+	}
+
+	public void setRatedCurrentVersion(boolean ratedCurrentVersion) {
+		mRatedCurrentVersion = ratedCurrentVersion;
 	}
 }
